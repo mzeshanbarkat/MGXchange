@@ -1,16 +1,89 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
 import 'package:mgxchange/Components/authbutton.dart';
 import 'package:mgxchange/Components/textfieldd.dart';
 import 'package:mgxchange/Data/Constant.dart';
 import 'package:get/get.dart';
+import 'package:mgxchange/Screens/Auth/services/global_method.dart';
 import 'package:mgxchange/Screens/Auth/signup.dart';
 import 'package:mgxchange/Screens/MainScreen/userdashboard.dart';
 
-class Login extends StatelessWidget {
+import 'forgotpassword.dart';
 
+class Login extends StatefulWidget {
   const Login({Key key}) : super(key: key);
 
+  @override
+  _LoginState createState() => _LoginState();
+}
+final TextEditingController _email = TextEditingController();
+final TextEditingController _password = TextEditingController();
+final _auth=  FirebaseAuth.instance;
+final firebaseUser = FirebaseAuth.instance.currentUser;
+
+
+
+class _LoginState extends State<Login> {
+
+  final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  GlobalMethods _globalMethods = GlobalMethods();
+  final FocusNode _passwordFocusNode = FocusNode();
+  bool _obscureText = true;
+  // String _email = '';
+  // String _password = '';
+  bool _isLoading = false;
+  @override
+  void dispose() {
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
+  _login()async {
+    // final isValid = _formKey.currentState.validate();
+    // FocusScope.of(context).unfocus();
+    // if (isValid) {
+    //   setState(() {
+    //     _isLoading = true;
+    //   });
+    //   _formKey.currentState.save();
+      try {
+        await _auth
+            .signInWithEmailAndPassword(
+            email: _email.text.toLowerCase().trim(),
+            password: _password.text.trim())
+        .then((value) =>
+        Navigator.canPop(context) ? Navigator.pop(context) : null);
+
+         {
+          Get.to(UserDashboard());
+
+
+          Get.snackbar(
+            "Welcome to Dashboard", // title
+            "You have Login Succesfully", // message
+            shouldIconPulse: true,
+            // onTap:(){},
+            barBlur: 20,
+            isDismissible: true,
+            duration: Duration(seconds: 4),
+            snackPosition: SnackPosition.BOTTOM,
+            colorText: Colors.white,
+            backgroundColor: Colors.grey[900],
+
+          );
+        }
+      } catch (error) {
+        _globalMethods.authErrorHandle(error.message, context);
+        print('error occured ${error.message}');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  // }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -51,28 +124,58 @@ class Login extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    TextFieldd(hinttextt: 'mian@gmail.com',
+                    TextFieldd(
+                      key: ValueKey('email'),
+                      Validator: (value) {
+                        if (value.isEmpty || !value.contains('@')) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                      controller: _email,
+                      hinttextt: 'mian@gmail.com',
                       obscre: false,
                     ),
-                    TextFieldd(hinttextt: 'Enter your Password',
-                      obscre: true,
-                      iconn: Icon(Icons.remove_red_eye),
+                    TextFieldd(
+                      key: ValueKey('Password'),
+                      Validator: (value) {
+                        if (value.isEmpty || value.length < 7) {
+                          return 'Please enter a valid Password';
+                        }
+                        return null;
+                      },
+                      controller: _password,
+                      hinttextt: 'Enter your Password',
+                      obscre: _obscureText,
+                      iconn: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _obscureText = !_obscureText;
+                          });
+                        },
+                        child: Icon(_obscureText
+                            ? Icons.visibility
+                            : Icons.visibility_off),
+                      ),
                     ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text('Forgot Password?',style: Textt2.textStyle(FontColor, 15.0),),
+                        InkWell(
+                            onTap: (){Get.to(ForgotPassword());
+                            },
+                            child: Text('Forgot Password?',style: Textt2.textStyle(FontColor, 15.0),)),
                       ],
                     )
 
                   ],
                 ),
               ),
-
-              AuthButton(
+              _isLoading
+              ? CircularProgressIndicator()
+              :AuthButton(
                 onchanged: (){
-                  Get.to(UserDashboard());
+                  _login();
                 },
                 textt: 'LOGIN',
                 textStyle: Textt1.textStyle(Colors.white, 18.0),
@@ -104,4 +207,3 @@ class Login extends StatelessWidget {
     );
   }
 }
-
