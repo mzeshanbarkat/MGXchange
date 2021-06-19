@@ -49,15 +49,28 @@ class _LoginState extends State<Login> {
     //   });
     //   _formKey.currentState.save();
       try {
-        await _auth
+       final user = await _auth
             .signInWithEmailAndPassword(
             email: _email.text.toLowerCase().trim(),
             password: _password.text.trim())
-        .then((value) =>
-        Navigator.canPop(context) ? Navigator.pop(context) : null);
-
+            .then((result) => {
+          _email.clear(),
+          _password.clear(),
+        }
+    );
+    if (user != null)
          {
-          Get.to(UserDashboard());
+          // Get.offAll(UserDashboard());
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return  UserDashboard();
+              },
+            ),
+                (r) => false,
+          );
+
 
 
           Get.snackbar(

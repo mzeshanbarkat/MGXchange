@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/login',
+      initialRoute: '/Splashscreen',
       routes: <String, WidgetBuilder>{
         '/Splashscreen': (context) => SplashScreen(),
         '/onboarding_page': (context) => OnboardingPage(),
